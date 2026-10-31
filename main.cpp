@@ -1,17 +1,10 @@
 #include "mbed.h"
 
+#include "State.h"
 #include "Thermistor.h"
 #include "LightSensor.h"
 
 #include <iostream>
-
-// Definición de los estados posibles
-enum class State {
-    NORMAL,
-    WARNING,
-    ALARM,
-    ACKNOWLEDGED
-};
 
 class Estados {
 private:
@@ -49,20 +42,30 @@ public:
 /* PERIFERICOS */
 Thermistor thermistor(A0);
 LightSensor lightsensor(A1);
+PwmOut led(D3);
 
 // main() runs in its own thread in the OS
 int main()
 {
-    float temperature;
+    float temperature, light_current, light_compens;
     Estados state_machine(10,20);
     State state;
 
+    led.period_ms(10);
+    
     while ( true ) {
+        
         temperature = thermistor.celsius();
 
         state = state_machine.actualizar(temperature);
 
-        // hacer cosas con el nuevo estado {NORMAL,WARNING,ALARM}
+        light_current = lightsensor.readPercentage();
+        light_compens = 100.0f - light_current;
 
+        led.write(light_compens/100.0f);
+
+        printf("Temp: %.2f ºC | Light: %.2f l -> %.2f l\n", temperature, light_current, light_compens);
+
+        ThisThread::sleep_for(500ms);
     }
 }
