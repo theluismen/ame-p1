@@ -8,3 +8,5 @@ Primera práctica de la asignatura `Embedded and Mobile Applications`.
 | Sensor de Temperatura | `A0` | 
 | Sensor de Luz | `A1` |
 | LED | `D3` |
+| Buzzer | `D5` |
+| Botón | `D4` |
