@@ -12,7 +12,7 @@
 #define WARNING_STATE_RANGE 3 // 3 ºC
 
 /* DISPOSITIVOS E/S */
-Thermistor  thermistor(A0);
+Thermistor  thermistor(A0, 5);
 LightSensor lightsensor(A1);
 AnalogIn    potentiometer(A3);
 PwmOut      led(D3);
@@ -59,7 +59,7 @@ int main()
     /* VARIABLES LOCALES */
     float temperature;
     float light_current, light_compens;
-    float potentiometer_value, potentiometer_value_prev;
+    float potentiometer_value;
     float threshold_lower = 20, threshold_upper = 24;
 
     StateMachine state_machine(threshold_lower,threshold_upper, WARNING_STATE_RANGE);
@@ -105,16 +105,15 @@ int main()
             }
         }
 
-        potentiometer_value_prev = potentiometer_value;
-
         state_machine.setLowerThreshold(threshold_lower);
         state_machine.setUpperThreshold(threshold_upper);
 
-        printf("State: %d | Temp: %.2f ºC | Light: %.2f l -> %.2f l | Pot: %.2f | EDITANDO: %s | Limites (%.2f, %.2f)\n", 
+        printf("State: %d | Temp: %.2f ºC | Light: %.2f l (%.2f) -> %.2f l | Pot: %.2f | EDITANDO: %s | Limites (%.2f, %.2f)\n", 
             state_current, 
             temperature,
             light_current, 
-            light_compens, 
+            light_compens,
+            light_compens/100.0f, 
             potentiometer_value,
             button_reg ? "SUP" : "INF",
             threshold_lower,

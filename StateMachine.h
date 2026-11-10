@@ -5,19 +5,25 @@
 
 class StateMachine {
 private:
-    double umbral_bajo;
-    double umbral_alto;
+    float umbral_bajo;
+    float umbral_alto;
+    float warning_state_range;
     State estado;
+
 
 public:
     // Constructor
-    StateMachine(double umbral_bajo, double umbral_alto);
+    StateMachine(float umbral_bajo, float umbral_alto, float warning_state_range);
 
     // Método para actualizar el estado
-    State update(double valor_actual);
+    State update(float valor_actual);
 
     // Método para consultar el estado actual
     State getState() const;
+
+    void setUpperThreshold( float t );
+
+    void setLowerThreshold( float t );
 };
 
 #endif

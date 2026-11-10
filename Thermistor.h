@@ -5,9 +5,10 @@
 class Thermistor {
     private:
         AnalogIn pin;
+        float v_cc; // Variable para almacenar el voltaje de alimentación
 
     public:
-        Thermistor ( PinName pin );
+        Thermistor( PinName pin, float v_cc = 3.3f );
 
         ~Thermistor();
 

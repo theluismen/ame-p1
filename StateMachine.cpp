@@ -1,15 +1,16 @@
 #include "StateMachine.h"
+
 // Constructor
-StateMachine::StateMachine(double umbral_bajo, double umbral_alto) 
-    : umbral_bajo(umbral_bajo), umbral_alto(umbral_alto), estado(State::NORMAL) {}
+StateMachine::StateMachine(float umbral_bajo, float umbral_alto, float warning_state_range) 
+    : umbral_bajo(umbral_bajo), umbral_alto(umbral_alto), estado(State::NORMAL), warning_state_range(warning_state_range) {}
 
 // Método para actualizar el estado
-State StateMachine::update(double valor_actual) {
+State StateMachine::update(float valor_actual) {
     if (valor_actual >= umbral_bajo && valor_actual <= umbral_alto) {
         estado = State::NORMAL;
     } 
-    else if ((valor_actual > umbral_alto && valor_actual <= umbral_alto + 3) || 
-             (valor_actual < umbral_bajo && valor_actual >= umbral_bajo - 3)) {
+    else if ((valor_actual > umbral_alto && valor_actual <= umbral_alto + warning_state_range) || 
+             (valor_actual < umbral_bajo && valor_actual >= umbral_bajo - warning_state_range)) {
         estado = State::WARNING;
     } 
     else {
@@ -22,4 +23,14 @@ State StateMachine::update(double valor_actual) {
 // Método para consultar el estado actual
 State StateMachine::getState() const {
     return estado;
+}
+
+// Método para modificar el límite superior
+void StateMachine::setUpperThreshold ( float t ) {
+    this->umbral_alto = t;
+}
+
+// Método para modificar el límite superior
+void StateMachine::setLowerThreshold ( float t ) {
+    this->umbral_bajo = t;
 }

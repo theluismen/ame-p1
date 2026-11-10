@@ -1,7 +1,7 @@
 #include "Thermistor.h"
 #include <cmath>
 
-Thermistor::Thermistor(PinName pin) : pin(pin) {
+Thermistor::Thermistor(PinName pin, float v_cc ) : pin(pin), v_cc(v_cc) {
     
 }
 
@@ -15,7 +15,10 @@ float Thermistor::kelvins() {
 
     if (lectura <= 0.0f) lectura = 0.00001f;
 
-    float R_th = R_serie * ((1.0f / lectura) - 1.0f);
+    float denominador = ( v_cc / ( 3.3f * lectura ) ) - 1.0f;
+    if ( denominador <= 0.0f ) denominador = 0.00001f;
+
+    float R_th = R_serie * denominador;
 
     float T_K = 1.0f / (std::log(R_th / R_0) / Beta + (1.0f / T_0));
 
