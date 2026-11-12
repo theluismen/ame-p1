@@ -3,7 +3,7 @@
 #include "StateMachine.h"
 #include "Thermistor.h"
 #include "LightSensor.h"
-
+#include "Grove_LCD_RGB_Backlight.h"
 #include <cstdio>
 #include <iostream>
 
@@ -75,6 +75,9 @@ int main()
     /* INICIALIZAR TICKERS PARA BUZZER */
     buzzer_ticker_warning.attach(&RSI_toggle_buzzer_warning, 100ms);
     buzzer_ticker_alarm.attach(&RSI_toggle_buzzer_alarm, 50ms);
+
+    /* PANTALLA I2C */
+    Grove_LCD_RGB_Backlight display(D14,D15);
    
     while ( true ) {
         
