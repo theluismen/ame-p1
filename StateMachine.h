@@ -10,20 +10,23 @@ private:
     float warning_state_range;
     State estado;
 
-
 public:
     // Constructor
-    StateMachine(float umbral_bajo, float umbral_alto, float warning_state_range);
+    StateMachine ( float umbral_bajo, float umbral_alto, float warning_state_range );
 
     // Método para actualizar el estado
-    State update(float valor_actual);
+    State update ( float valor_actual );
 
     // Método para consultar el estado actual
-    State getState() const;
+    State getState () const;
 
-    void setUpperThreshold( float t );
+    void setUpperThreshold ( float t );
 
-    void setLowerThreshold( float t );
+    void setLowerThreshold ( float t );
+
+    float getUpperThreshold ();
+
+    float getLowerThreshold ();
 };
 
 #endif

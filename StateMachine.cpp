@@ -34,3 +34,13 @@ void StateMachine::setUpperThreshold ( float t ) {
 void StateMachine::setLowerThreshold ( float t ) {
     this->umbral_bajo = t;
 }
+
+// Método para consultar el límite superior
+float StateMachine::getUpperThreshold() {
+    return umbral_alto;
+}
+
+// Método para consultar el límite inferior
+float StateMachine::getLowerThreshold() {
+    return umbral_bajo;
+}

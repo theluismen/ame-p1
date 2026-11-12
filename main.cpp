@@ -10,30 +10,35 @@
 /* DEFINICIONES */
 #define NORMAL_STATE_RANGE  4 // 4 ºC
 #define WARNING_STATE_RANGE 3 // 3 ºC
+#define INITIAL_THRESHOLD_LOWER 20
+#define INITIAL_THRESHOLD_UPPER 26
 
 /* DISPOSITIVOS E/S */
 Thermistor  thermistor(A0, 5);
 LightSensor lightsensor(A1);
 AnalogIn    potentiometer(A3);
 PwmOut      led(D3);
-InterruptIn button(D4);
+InterruptIn   button(D4);
 PwmOut      buzzer(D5);
 InterruptIn user_button(PC_13);
 
 /* VARIABLES GLOBALES */
-State       state_current;
-Ticker      buzzer_ticker_warning, buzzer_ticker_alarm;
+State           state_current;
+Ticker          buzzer_ticker_warning, buzzer_ticker_alarm;
+StateMachine    state_machine(INITIAL_THRESHOLD_LOWER,INITIAL_THRESHOLD_UPPER, WARNING_STATE_RANGE);
+float           potentiometer_value, threshold_lower, threshold_upper;
+bool            editing;
 
 /* REGISTROS DE CONTROL */
 unsigned char buzzer_reg = 0;
-unsigned char button_reg = 0;
+volatile bool button_pressed_flag = false;
 
 void RSI_user_button () {
     state_current = State::ACKNOWLEDGED;
 }
 
-void RSI_button () {
-    button_reg = ! button_reg;
+void RSI_button() {    
+    button_pressed_flag = true; // Solo avisamos de que ocurrió la interrupción
 }
 
 void RSI_toggle_buzzer_warning () {
@@ -59,10 +64,6 @@ int main()
     /* VARIABLES LOCALES */
     float temperature;
     float light_current, light_compens;
-    float potentiometer_value;
-    float threshold_lower = 20, threshold_upper = 24;
-
-    StateMachine state_machine(threshold_lower,threshold_upper, WARNING_STATE_RANGE);
 
     /* INICIALIZAR ELEMENTOS PWM */
     led.period_ms(10);
@@ -71,17 +72,17 @@ int main()
     /* CONFIGURAR INTERRUPCIONES BOTONES */
     user_button.fall(&RSI_user_button);
     button.fall(&RSI_button);
-
+   
     /* INICIALIZAR TICKERS PARA BUZZER */
     buzzer_ticker_warning.attach(&RSI_toggle_buzzer_warning, 100ms);
     buzzer_ticker_alarm.attach(&RSI_toggle_buzzer_alarm, 50ms);
 
     /* PANTALLA I2C */
     Grove_LCD_RGB_Backlight display(D14,D15);
-   
+
     while ( true ) {
-        
-        temperature = thermistor.celsius();
+
+        temperature   = thermistor.celsius();
 
         state_current = state_machine.update(temperature);
 
@@ -90,37 +91,46 @@ int main()
 
         led.write(light_compens/100.0f);
 
-        potentiometer_value = potentiometer.read() * 100 - 40;   
+        potentiometer_value = potentiometer.read() * 100 - 40;
 
-        if ( button_reg ) {
-            // Límite Superior
-            if ( potentiometer_value >= threshold_lower + NORMAL_STATE_RANGE ) {
-                threshold_upper = potentiometer_value;
+        // Determinamos si editamos el umbral inferior o superior
+        threshold_lower = state_machine.getLowerThreshold();
+        threshold_upper = state_machine.getUpperThreshold();
+        editing = ( abs(potentiometer_value - threshold_lower) < abs(potentiometer_value - threshold_upper) ) ? 0 : 1;
+        
+        if ( button_pressed_flag ) {
+            button_pressed_flag = false;
+
+            if ( editing ) {
+                if ( potentiometer_value >= threshold_lower + NORMAL_STATE_RANGE ) {
+                    threshold_upper = potentiometer_value;
+                } else {
+                    threshold_upper = threshold_lower + NORMAL_STATE_RANGE;
+                }
+                state_machine.setUpperThreshold(threshold_upper);
             } else {
-                threshold_upper = threshold_lower + NORMAL_STATE_RANGE;
-            }
-        } else {
-            // Límite Inferior
-            if ( potentiometer_value <= threshold_upper - NORMAL_STATE_RANGE ) {
-                threshold_lower = potentiometer_value;
-            } else {
-                threshold_lower = threshold_upper - NORMAL_STATE_RANGE;
+                if ( potentiometer_value <= threshold_upper - NORMAL_STATE_RANGE ) {
+                    threshold_lower = potentiometer_value;
+                } else {
+                    threshold_lower = threshold_upper - NORMAL_STATE_RANGE;
+                }
+                state_machine.setLowerThreshold(threshold_lower);
             }
         }
 
-        state_machine.setLowerThreshold(threshold_lower);
-        state_machine.setUpperThreshold(threshold_upper);
-
-        printf("State: %d | Temp: %.2f ºC | Light: %.2f l (%.2f) -> %.2f l | Pot: %.2f | EDITANDO: %s | Limites (%.2f, %.2f)\n", 
+        printf("State: %d | Temp: %.2f ºC | Light: %.2f l (%.2f) -> %.2f l | ( %.2f %s %.2f %s %.2f ) -> %d %d\n", 
             state_current, 
             temperature,
             light_current, 
             light_compens,
             light_compens/100.0f, 
+            state_machine.getLowerThreshold(),
+            (! editing) ? "<" : "|",
             potentiometer_value,
-            button_reg ? "SUP" : "INF",
-            threshold_lower,
-            threshold_upper);
+            (editing) ? ">" : "|",
+            state_machine.getUpperThreshold(),
+            editing,
+            button.read());
 
         ThisThread::sleep_for(100ms);
     }
