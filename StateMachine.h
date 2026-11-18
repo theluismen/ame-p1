@@ -9,6 +9,7 @@ private:
     float umbral_alto;
     float warning_state_range;
     State estado;
+    State estado_prev;
 
 public:
     // Constructor
@@ -19,6 +20,8 @@ public:
 
     // Método para consultar el estado actual
     State getState () const;
+    
+    void acknowledged();
 
     void setUpperThreshold ( float t );
 

@@ -42,7 +42,7 @@ unsigned char buzzer_reg = 0;
 volatile bool button_pressed_flag = false;
 
 void RSI_user_button () {
-    state_current = State::ACKNOWLEDGED;
+    state_machine.acknowledged();
 }
 
 void RSI_button() {    
@@ -50,19 +50,23 @@ void RSI_button() {
 }
 
 void RSI_toggle_buzzer_warning () {
-    if ( state_current == State::WARNING ) {
+    State state = state_machine.getState();
+
+    if ( state == State::WARNING ) {
         buzzer.write( buzzer_reg & ( 1 << 0 ) ? 0.5f : 0.0f );
         buzzer_reg ^= ( 1 << 0 );
-    } else if ( state_current == State::NORMAL ) {
+    } else if ( state == State::NORMAL ) {
         buzzer.write( 0.0f );
     }
 }
 
 void RSI_toggle_buzzer_alarm () {
-    if ( state_current == State::ALARM ) {
+    State state = state_machine.getState();
+
+    if ( state == State::ALARM ) {
         buzzer.write( buzzer_reg & ( 1 << 1 ) ? 0.5f : 0.0f );
         buzzer_reg ^= ( 1 << 1 );
-    } else if ( state_current == State::NORMAL ) {
+    } else if ( state == State::NORMAL ) {
         buzzer.write( 0.0f );
     }
 }
@@ -85,7 +89,7 @@ void show_info () {
     std::snprintf(display_buffer_row1, sizeof(display_buffer_row1), "T:%.1fºC    L:%.0f", temperature, light_compens);
 
     /* Formatear la segunda fila de forma independiente */
-    std::snprintf(display_buffer_row2, sizeof(display_buffer_row2), "(%.0f|%.0f|%.0f) C:%.0f", threshold_lower, potentiometer_value, threshold_upper, light_compens);
+    std::snprintf(display_buffer_row2, sizeof(display_buffer_row2), "(%.0f%s%.0f%s%.0f) C:%.0f", threshold_lower, (! editing) ? "<" : "|", potentiometer_value, (editing) ? "|" : ">", threshold_upper, light_compens);
 
     /* Mostrar en la pantalla */
     display.locate(0, 0); // Primera fila
