@@ -18,7 +18,7 @@ Thermistor  thermistor(A0, 5);
 LightSensor lightsensor(A1);
 AnalogIn    potentiometer(A3);
 PwmOut      led(D3);
-InterruptIn   button(D4);
+InterruptIn button(D4);
 PwmOut      buzzer(D5);
 InterruptIn user_button(PC_13);
 
@@ -28,6 +28,11 @@ Ticker          buzzer_ticker_warning, buzzer_ticker_alarm;
 StateMachine    state_machine(INITIAL_THRESHOLD_LOWER,INITIAL_THRESHOLD_UPPER, WARNING_STATE_RANGE);
 float           potentiometer_value, threshold_lower, threshold_upper;
 bool            editing;
+float           temperature;
+float           light_current, light_compens;
+
+/* PANTALLA I2C */
+Grove_LCD_RGB_Backlight display(D14,D15);
 
 /* REGISTROS DE CONTROL */
 unsigned char buzzer_reg = 0;
@@ -59,12 +64,34 @@ void RSI_toggle_buzzer_alarm () {
     }
 }
 
+// TODO
+void show_info () {
+    /* Show the system data */
+    display.locate(0, 0); // First row
+    display.print("");
+
+    display.locate(0, 1); // Second row
+    display.print("");
+
+    /* Change color depending on state */
+    switch ( state_current ) {
+        case State::NORMAL:
+            display.setRGB(0x00, 0XFF, 0x00); // GREEN
+            break;
+        case State::WARNING:
+            display.setRGB(0xFF, 0XFF, 0x00); // YELLOW
+            break;
+        case State::ALARM:
+            display.setRGB(0xFF, 0x00, 0x00); // RED
+            break;
+        case State::ACKNOWLEDGED:
+            display.setRGB(0x00, 0x00, 0xFF); // BLUE
+            break;
+    }
+}
+
 int main()
 {
-    /* VARIABLES LOCALES */
-    float temperature;
-    float light_current, light_compens;
-
     /* INICIALIZAR ELEMENTOS PWM */
     led.period_ms(10);
     buzzer.period_us(500);
@@ -76,9 +103,6 @@ int main()
     /* INICIALIZAR TICKERS PARA BUZZER */
     buzzer_ticker_warning.attach(&RSI_toggle_buzzer_warning, 100ms);
     buzzer_ticker_alarm.attach(&RSI_toggle_buzzer_alarm, 50ms);
-
-    /* PANTALLA I2C */
-    Grove_LCD_RGB_Backlight display(D14,D15);
 
     while ( true ) {
 
@@ -117,6 +141,9 @@ int main()
                 state_machine.setLowerThreshold(threshold_lower);
             }
         }
+
+        // TODO
+        show_info();
 
         printf("State: %d | Temp: %.2f ºC | Light: %.2f l (%.2f) -> %.2f l | ( %.2f %s %.2f %s %.2f ) -> %d %d\n", 
             state_current, 

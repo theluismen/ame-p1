@@ -10,6 +10,6 @@ Se ha usado la placa `STMicroelectronics NUCLEO-F767ZI`.
 | Sensor de Luz | `A1` |
 | Potenciómetro | `A3` |
 | LED | `D3` |
-| Botón | `D4` |
+| Botón Externo | `D4` |
 | Buzzer | `D5` |
 | Botón `USER` (viene integrado) | `PC_13` |
