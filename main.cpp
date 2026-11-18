@@ -5,7 +5,9 @@
 #include "LightSensor.h"
 #include "Grove_LCD_RGB_Backlight.h"
 #include <cstdio>
+#include <format>
 #include <iostream>
+#include <string>
 
 /* DEFINICIONES */
 #define NORMAL_STATE_RANGE  4 // 4 ºC
@@ -33,6 +35,7 @@ float           light_current, light_compens;
 
 /* PANTALLA I2C */
 Grove_LCD_RGB_Backlight display(D14,D15);
+char * display_buffer = new char[16];
 
 /* REGISTROS DE CONTROL */
 unsigned char buzzer_reg = 0;
@@ -64,14 +67,31 @@ void RSI_toggle_buzzer_alarm () {
     }
 }
 
+/*
+##################
+#T:XX.XC    L:XX%#
+#(XX|XX|XX) C:XX%#
+##################
+*/
+
 // TODO
 void show_info () {
     /* Show the system data */
-    display.locate(0, 0); // First row
-    display.print("");
+    /* Definir búferes independientes para cada línea (asumiendo LCD de 16x2) */
+    char display_buffer_row1[17];
+    char display_buffer_row2[17];
 
-    display.locate(0, 1); // Second row
-    display.print("");
+    /* Formatear la primera fila */
+    std::snprintf(display_buffer_row1, sizeof(display_buffer_row1), "T:%.1fºC    L:%.0f", temperature, light_compens);
+
+    /* Formatear la segunda fila de forma independiente */
+    std::snprintf(display_buffer_row2, sizeof(display_buffer_row2), "(%.0f|%.0f|%.0f) C:%.0f", threshold_lower, potentiometer_value, threshold_upper, light_compens);
+
+    /* Mostrar en la pantalla */
+    display.locate(0, 0); // Primera fila
+    display.print(display_buffer_row1);
+    display.locate(0, 1); // Segunda fila
+    display.print(display_buffer_row2);
 
     /* Change color depending on state */
     switch ( state_current ) {
