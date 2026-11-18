@@ -86,10 +86,10 @@ void show_info () {
     char display_buffer_row2[17];
 
     /* Formatear la primera fila */
-    std::snprintf(display_buffer_row1, sizeof(display_buffer_row1), "T:%.1fºC    L:%.0f", temperature, light_compens);
+    std::snprintf(display_buffer_row1, sizeof(display_buffer_row1), "T:%4.1fC   L:%3.0f%%", temperature, light_current);
 
     /* Formatear la segunda fila de forma independiente */
-    std::snprintf(display_buffer_row2, sizeof(display_buffer_row2), "(%.0f%s%.0f%s%.0f) C:%.0f", threshold_lower, (! editing) ? "<" : "|", potentiometer_value, (editing) ? "|" : ">", threshold_upper, light_compens);
+    std::snprintf(display_buffer_row2, sizeof(display_buffer_row2), "(%2.0f%s%2.0f%s%2.0f)C:%3.0f%%", threshold_lower, (! editing) ? "<" : "|", potentiometer_value, (editing) ? ">" : "|", threshold_upper, light_compens);
 
     /* Mostrar en la pantalla */
     display.locate(0, 0); // Primera fila
@@ -114,6 +114,21 @@ void show_info () {
     }
 }
 
+void show_boot_sequence() {
+    char *boot_msg = "Booting...";
+
+    display.clear();          // Limpia la pantalla antes de empezar
+    display.locate(0, 0);     // Coloca el cursor en la columna 0, fila 0
+    display.setRGB(0xFF,0xFF,0xFF);
+
+    // Recorre la cadena carácter a carácter hasta llegar al final ('\0')
+    for (int i = 0; boot_msg[i] != '\0'; i++) {
+        display.writech(boot_msg[i]);     // Envía el carácter individual a la LCD
+        ThisThread::sleep_for(150ms); // Pausa de 150 ms entre cada letra
+    }
+    ThisThread::sleep_for(1s);
+}
+
 int main()
 {
     /* INICIALIZAR ELEMENTOS PWM */
@@ -127,6 +142,8 @@ int main()
     /* INICIALIZAR TICKERS PARA BUZZER */
     buzzer_ticker_warning.attach(&RSI_toggle_buzzer_warning, 100ms);
     buzzer_ticker_alarm.attach(&RSI_toggle_buzzer_alarm, 50ms);
+
+    show_boot_sequence();
 
     while ( true ) {
 
